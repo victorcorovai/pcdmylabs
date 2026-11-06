@@ -1,3 +1,6 @@
+import javax.swing.*;
+import java.awt.*;
+
 public class PCDlab2 {
     public static void main(String[] args) {
         // Главная группа потоков (Main)
@@ -46,14 +49,33 @@ public class PCDlab2 {
         Thread th3G2 = new Thread(groupG2, "Th3");
         th3G2.setPriority(3);
 
-        // Рекурсивный вывод информации о всех потоках и группах, начиная с главной
-        printGroupInfo(mainGroup, 0);
+        // Собираем текст иерархии в StringBuilder вместо прямого вывода в консоль
+        StringBuilder sb = new StringBuilder();
+        collectGroupInfo(mainGroup, 0, sb);
+
+        // Создаем графический интерфейс (Swing)
+        SwingUtilities.invokeLater(() -> {
+            JFrame frame = new JFrame("Лабораторная работа - Вариант 10 (Потоки)");
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setSize(600, 450);
+            frame.setLocationRelativeTo(null);
+
+            // Текстовая область с прокруткой
+            JTextArea textArea = new JTextArea(sb.toString());
+            textArea.setEditable(false);
+            textArea.setFont(new Font("Monospaced", Font.PLAIN, 14));
+
+            JScrollPane scrollPane = new JScrollPane(textArea);
+            frame.add(scrollPane, BorderLayout.CENTER);
+
+            frame.setVisible(true);
+        });
     }
 
-    // Рекурсивный метод для обхода и вывода информации о группах и потоках
-    private static void printGroupInfo(ThreadGroup group, int indent) {
+    // Рекурсивный метод для сбора информации о группах и потоках в строку
+    private static void collectGroupInfo(ThreadGroup group, int indent, StringBuilder sb) {
         String indentation = "  ".repeat(indent);
-        System.out.println(indentation + "Группа потоков: " + group.getName());
+        sb.append(indentation).append("Группа потоков: ").append(group.getName()).append("\n");
 
         // Получаем все потоки в текущей группе
         Thread[] threads = new Thread[group.activeCount()];
@@ -62,9 +84,9 @@ public class PCDlab2 {
         for (int i = 0; i < count; i++) {
             Thread t = threads[i];
             if (t != null) {
-                System.out.println(indentation + "  -> Поток: [Имя: " + t.getName() +
-                        ", Группа: " + t.getThreadGroup().getName() +
-                        ", Приоритет: " + t.getPriority() + "]");
+                sb.append(indentation).append("  -> Поток: [Имя: ").append(t.getName())
+                        .append(", Группа: ").append(t.getThreadGroup().getName())
+                        .append(", Приоритет: ").append(t.getPriority()).append("]\n");
             }
         }
 
@@ -74,7 +96,7 @@ public class PCDlab2 {
 
         for (int i = 0; i < groupCount; i++) {
             if (subGroups[i] != null) {
-                printGroupInfo(subGroups[i], indent + 1);
+                collectGroupInfo(subGroups[i], indent + 1, sb);
             }
         }
     }
